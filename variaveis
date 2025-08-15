@@ -1,0 +1,23 @@
+{
+  "_id": "env_global_001",
+  "type": "Environment",
+  "parentId": "wrk_123456",
+  "modified": 1699999999999,
+  "created": 1699999999999,
+  "name": "Base Environment",
+  "data": {
+    "baseUrl": "https://api.exemplo.com",
+    "token": "meu_token_super_secreto",
+    "versao": "v1"
+  },
+  "dataPropertyOrder": {
+    "&": [
+      "baseUrl",
+      "token",
+      "versao"
+    ]
+  },
+  "color": null,
+  "isPrivate": false,
+  "metaSortKey": -1699999999999
+}

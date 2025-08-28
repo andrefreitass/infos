@@ -3,12 +3,12 @@ setlocal EnableExtensions EnableDelayedExpansion
 
 :: --- BASE DAS VERSOES. Se voce ja criou uma variavel de usuario JAVA_BASE, ela sera usada.
 set "JAVA_BASE=%JAVA_BASE%"
-if not defined JAVA_BASE set "JAVA_BASE=C:\Java"
+if not defined JAVA_BASE set "JAVA_BASE=C:\develop\ferramentas\java"
 
 if "%~1"=="" goto :usage
 
 set "VERSION=%~1"
-set "JAVA_HOME=%JAVA_BASE%\jdk%VERSION%"
+set "JAVA_HOME=%JAVA_BASE%\java-%VERSION%"
 
 if not exist "%JAVA_HOME%\bin\java.exe" (
   echo ERRO: Nao encontrei "%JAVA_HOME%\bin\java.exe".
@@ -22,11 +22,10 @@ for /f "skip=2 tokens=1,2,*" %%A in ('reg query "HKCU\Environment" /v Path 2^>nu
   if /I "%%A"=="Path" set "USER_PATH=%%C"
 )
 
-:: Se nao houver PATH de usuario ainda, evita variavel vazia com ponto-e-virgula sobrando
 if not defined USER_PATH set "USER_PATH="
 
-:: --- Remove quaisquer paths de versões antigas dentro de %JAVA_BASE%\jdk* --- 
-for /f "delims=" %%D in ('dir /b /ad "%JAVA_BASE%\jdk*" 2^>nul') do (
+:: --- Remove quaisquer paths de versões antigas dentro de %JAVA_BASE%\java-* ---
+for /f "delims=" %%D in ('dir /b /ad "%JAVA_BASE%\java-*" 2^>nul') do (
   set "USER_PATH=!USER_PATH:;%JAVA_BASE%\%%D\bin=! "
   set "USER_PATH=!USER_PATH:%JAVA_BASE%\%%D\bin;=! "
   set "USER_PATH=!USER_PATH:%JAVA_BASE%\%%D\bin=! "

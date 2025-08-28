@@ -1,0 +1,72 @@
+@echo off
+setlocal EnableExtensions EnableDelayedExpansion
+
+:: --- BASE DAS VERSOES. Se voce ja criou uma variavel de usuario JAVA_BASE, ela sera usada.
+set "JAVA_BASE=%JAVA_BASE%"
+if not defined JAVA_BASE set "JAVA_BASE=C:\Java"
+
+if "%~1"=="" goto :usage
+
+set "VERSION=%~1"
+set "JAVA_HOME=%JAVA_BASE%\jdk%VERSION%"
+
+if not exist "%JAVA_HOME%\bin\java.exe" (
+  echo ERRO: Nao encontrei "%JAVA_HOME%\bin\java.exe".
+  echo Ajuste JAVA_BASE ou verifique as pastas.
+  exit /b 1
+)
+
+:: --- Lê o PATH do usuario atual (HKCU) ---
+set "USER_PATH="
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query "HKCU\Environment" /v Path 2^>nul') do (
+  if /I "%%A"=="Path" set "USER_PATH=%%C"
+)
+
+:: Se nao houver PATH de usuario ainda, evita variavel vazia com ponto-e-virgula sobrando
+if not defined USER_PATH set "USER_PATH="
+
+:: --- Remove quaisquer paths de versões antigas dentro de %JAVA_BASE%\jdk* --- 
+for /f "delims=" %%D in ('dir /b /ad "%JAVA_BASE%\jdk*" 2^>nul') do (
+  set "USER_PATH=!USER_PATH:;%JAVA_BASE%\%%D\bin=! "
+  set "USER_PATH=!USER_PATH:%JAVA_BASE%\%%D\bin;=! "
+  set "USER_PATH=!USER_PATH:%JAVA_BASE%\%%D\bin=! "
+)
+
+:: --- Monta o novo PATH do usuario, priorizando a versao escolhida ---
+set "NEW_PATH=%JAVA_HOME%\bin"
+if defined USER_PATH (
+  if not "%USER_PATH%"=="" set "NEW_PATH=%NEW_PATH%;%USER_PATH%"
+)
+
+:: --- Deduplica ;; e remove ; nas pontas ---
+:dedup
+set "TMP=%NEW_PATH:;;=;%"
+if not "%TMP%"=="%NEW_PATH%" (
+  set "NEW_PATH=%TMP%"
+  goto :dedup
+)
+if "%NEW_PATH:~0,1%"==";" set "NEW_PATH=%NEW_PATH:~1%"
+if "%NEW_PATH:~-1%"==";" set "NEW_PATH=%NEW_PATH:~0,-1%"
+
+echo.
+echo Atualizando variaveis de USUARIO:
+echo   JAVA_HOME = %JAVA_HOME%
+echo   Path      = ^(com %JAVA_HOME%\bin no inicio^)
+echo.
+
+:: --- Persiste para o usuario (proximos terminais) ---
+setx JAVA_HOME "%JAVA_HOME%" >nul
+setx Path "%NEW_PATH%" >nul
+
+:: --- Aplica imediatamente nesta janela atual ---
+set "JAVA_HOME=%JAVA_HOME%"
+set "PATH=%JAVA_HOME%\bin;%PATH%"
+
+echo Versao ativa nesta janela:
+java -version
+exit /b 0
+
+:usage
+echo Uso:  switch-java ^<8^|11^|17^|21^>
+echo Ex.:  switch-java 17
+exit /b 1
